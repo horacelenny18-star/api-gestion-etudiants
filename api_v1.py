@@ -20,6 +20,7 @@ def home():
     return 'Page d\'accueil'
 
 
+
 @app.route('/v1/etudiants/', methods=['GET'])
 def getEtudiants():
     mydb = get_db_connection()
@@ -54,7 +55,6 @@ def getEtudiant(id):
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
         
     cursor = mydb.cursor()
-   
     query = f"SELECT * FROM etudiant WHERE idetudiant = {id}"
     cursor.execute(query)
     row = cursor.fetchone()
@@ -63,7 +63,7 @@ def getEtudiant(id):
     mydb.close()
     
     if row is None:
-        return jsonify({"error": "Étudiant non trouvé"}), 404
+        return jsonify({"error": "id invalide"}), 404
         
     etudiant = {
         "idetudiant": row[0],
@@ -74,6 +74,7 @@ def getEtudiant(id):
     }
     
     return jsonify(etudiant), 200
+
 
 
 @app.route('/v1/etudiants/', methods=['POST'])
@@ -90,7 +91,6 @@ def addEtudiant():
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
         
     cursor = mydb.cursor()
-  
     query = f"INSERT INTO etudiant (nom, prenom, email, telephone) VALUES ('{nom}', '{prenom}', '{email}', '{telephone}')"
     cursor.execute(query)
     mydb.commit()
@@ -98,7 +98,36 @@ def addEtudiant():
     cursor.close()
     mydb.close()
     
-    return jsonify({"message": "Étudiant ajouté avec succès"}), 201
+    return jsonify({"message": "Ajout OK"}), 201
+
+
+@app.route('/v1/etudiants/<int:id>', methods=['PUT'])
+def updateEtudiant(id):
+    data = request.get_json()
+    
+    nom = data.get('nom')
+    prenom = data.get('prenom')
+    email = data.get('email')
+    telephone = data.get('telephone')
+    
+    mydb = get_db_connection()
+    if mydb is None:
+        return jsonify({"error": "Échec de connexion à la base de données"}), 500
+        
+    cursor = mydb.cursor()
+    query = f"UPDATE etudiant SET nom = '{nom}', prenom = '{prenom}', email = '{email}', telephone = '{telephone}' WHERE idetudiant = {id}"
+    cursor.execute(query)
+    mydb.commit()
+    
+    affected_rows = cursor.rowcount
+    cursor.close()
+    mydb.close()
+    
+    if affected_rows == 0:
+        return jsonify({"error": "id invalide"}), 404
+        
+    return jsonify({"message": "Modification OK"}), 200
+
 
 
 @app.route('/v1/etudiants/<int:id>', methods=['DELETE'])
@@ -108,7 +137,6 @@ def deleteEtudiant(id):
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
         
     cursor = mydb.cursor()
-  
     query = f"DELETE FROM etudiant WHERE idetudiant = {id}"
     cursor.execute(query)
     mydb.commit()
@@ -118,9 +146,10 @@ def deleteEtudiant(id):
     mydb.close()
     
     if affected_rows == 0:
-        return jsonify({"error": "Étudiant non trouvé"}), 404
+        return jsonify({"error": "id invalide"}), 404
         
-    return jsonify({"message": "Étudiant supprimé avec succès"}), 200
+    return jsonify({"message": "Suppression OK"}), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True)
