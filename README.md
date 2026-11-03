@@ -66,3 +66,4 @@ Utilisation de JSON Web Tokens (JWT) : Remplacer ou compléter la Basic Auth par
 Chiffrement des flux (HTTPS) : Implémenter un certificat SSL/TLS (via Let's Encrypt ou un certificat auto-signé) pour chiffrer les échanges HTTP et éviter l'interception des identifiants en clair sur le réseau local.
 
 Validation stricte des entrées : Mettre en place des mécanismes avancés de nettoyage et de validation des données pour prémunir l'API contre les injections SQL et les failles XSS.
+
