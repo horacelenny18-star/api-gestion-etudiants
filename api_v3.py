@@ -15,12 +15,36 @@ def get_db_connection():
         print(f"Erreur MySQL : {err}")
         return None
 
+def login():
+    auth = request.authorization
+    if not auth or not auth.username or not auth.password:
+        return False
+        
+    mydb = get_db_connection()
+    if mydb is None:
+        return False
+        
+    cursor = mydb.cursor()
+    req = f"SELECT * FROM user WHERE login = '{auth.username}' AND password = '{auth.password}'"
+    cursor.execute(req)
+    data = cursor.fetchone()
+    
+    cursor.close()
+    mydb.close()
+    
+    if data:
+        return True
+    return False
+
 @app.route('/')
 def home():
-    return 'Page d\'accueil'
+    return 'Page d\'accueil (API v3)'
 
-@app.route('/v2/etudiants', methods=['GET'])
+@app.route('/v3/etudiants/', methods=['GET'])
 def getEtudiants():
+    if not login():
+        return jsonify("Accès refusé"), 401
+        
     mydb = get_db_connection()
     if mydb is None:
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
@@ -45,16 +69,17 @@ def getEtudiants():
     mydb.close()
     return jsonify(etudiants), 200
 
-@app.route('/v2/etudiants/<int:id>', methods=['GET'])
+@app.route('/v3/etudiants/<int:id>', methods=['GET'])
 def getEtudiant(id):
+    if not login():
+        return jsonify("Accès refusé"), 401
+        
     mydb = get_db_connection()
     if mydb is None:
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
         
     cursor = mydb.cursor()
-    # Utilisation de la f-string comme indiqué dans le PDF
     req = f"SELECT * FROM etudiant WHERE idetudiant = {id}"
-    print(req)
     
     try:
         cursor.execute(req)
@@ -74,8 +99,11 @@ def getEtudiant(id):
         mydb.close()
         return jsonify({'erreur': 'id invalide'}), 404
 
-@app.route('/v2/etudiants', methods=['POST'])
+@app.route('/v3/etudiants/', methods=['POST'])
 def addEtudiant():
+    if not login():
+        return jsonify("Accès refusé"), 401
+        
     data = request.get_json()
     nom = data.get('nom')
     prenom = data.get('prenom')
@@ -95,8 +123,11 @@ def addEtudiant():
     mydb.close()
     return jsonify({"message": "Ajout OK"}), 201
 
-@app.route('/v2/etudiants/<int:id>', methods=['PUT'])
+@app.route('/v3/etudiants/<int:id>', methods=['PUT'])
 def updateEtudiant(id):
+    if not login():
+        return jsonify("Accès refusé"), 401
+        
     data = request.get_json()
     nom = data.get('nom')
     prenom = data.get('prenom')
@@ -121,8 +152,12 @@ def updateEtudiant(id):
         
     return jsonify({"message": "Modification OK"}), 200
 
-@app.route('/v2/etudiants/<int:id>', methods=['DELETE'])
+
+@app.route('/v3/etudiants/<int:id>', methods=['DELETE'])
 def deleteEtudiant(id):
+    if not login():
+        return jsonify("Accès refusé"), 401
+        
     mydb = get_db_connection()
     if mydb is None:
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
