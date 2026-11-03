@@ -1,93 +1,115 @@
 import mysql.connector
 
 class Database:
-    def __init__(self):
-        self.host = "127.0.0.1"
-        self.user = "extern_user"
-        self.password = "bt5@c13l972"
-        self.database = "ciel2027"
+    def __init__(self, host, user, password, database):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
+        self.connection = None
 
     def connect(self):
         try:
-            return mysql.connector.connect(
+            self.connection = mysql.connector.connect(
                 host=self.host,
                 user=self.user,
                 password=self.password,
                 database=self.database
             )
+            return self.connection
         except mysql.connector.Error as err:
             print(f"Erreur MySQL : {err}")
             return None
 
+    def authorized(self, username, password):
+        conn = self.connect()
+        if not conn:
+            return False
+        cursor = conn.cursor()
+        req = f"SELECT * FROM user WHERE login = '{username}' AND password = '{password}'"
+        cursor.execute(req)
+        data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return data is not None
+
     def readAll(self):
-        db = self.connect()
-        if db is None:
+        conn = self.connect()
+        if not conn:
             return None
-        cursor = db.cursor()
+        cursor = conn.cursor()
         cursor.execute("SELECT * FROM etudiant")
         result = cursor.fetchall()
+        
+        etudiants = []
+        for row in result:
+            etudiants.append({
+                "idetudiant": row[0],
+                "nom": row[1],
+                "prenom": row[2],
+                "email": row[3],
+                "telephone": row[4]
+            })
         cursor.close()
-        db.close()
-        return result
+        conn.close()
+        return etudiants
 
-    def readOne(self, id_etudiant):
-        db = self.connect()
-        if db is None:
+    def readOne(self, id):
+        conn = self.connect()
+        if not conn:
             return None
-        cursor = db.cursor()
-        query = f"SELECT * FROM etudiant WHERE idetudiant = {id_etudiant}"
-        cursor.execute(query)
+        cursor = conn.cursor()
+        req = f"SELECT * FROM etudiant WHERE idetudiant = {id}"
+        cursor.execute(req)
         row = cursor.fetchone()
         cursor.close()
-        db.close()
-        return row
+        conn.close()
+        
+        if row is None:
+            return None
+            
+        return {
+            "idetudiant": row[0],
+            "nom": row[1],
+            "prenom": row[2],
+            "email": row[3],
+            "telephone": row[4]
+        }
 
     def create(self, nom, prenom, email, telephone):
-        db = self.connect()
-        if db is None:
+        conn = self.connect()
+        if not conn:
             return False
-        cursor = db.cursor()
-        query = "INSERT INTO etudiant (nom, prenom, email, telephone) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (nom, prenom, email, telephone))
-        db.commit()
+        cursor = conn.cursor()
+        query = f"INSERT INTO etudiant (nom, prenom, email, telephone) VALUES ('{nom}', '{prenom}', '{email}', '{telephone}')"
+        cursor.execute(query)
+        conn.commit()
         cursor.close()
-        db.close()
+        conn.close()
         return True
 
-    def update(self, id_etudiant, nom, prenom, email, telephone):
-        db = self.connect()
-        if db is None:
+    def update(self, id, nom, prenom, email, telephone):
+        conn = self.connect()
+        if not conn:
             return 0
-        cursor = db.cursor()
-        query = "UPDATE etudiant SET nom = %s, prenom = %s, email = %s, telephone = %s WHERE idetudiant = %s"
-        cursor.execute(query, (nom, prenom, email, telephone, id_etudiant))
-        db.commit()
-        affected_rows = cursor.rowcount
-        cursor.close()
-        db.close()
-        return affected_rows
-
-    def delete(self, id_etudiant):
-        db = self.connect()
-        if db is None:
-            return 0
-        cursor = db.cursor()
-        query = f"DELETE FROM etudiant WHERE idetudiant = {id_etudiant}"
+        cursor = conn.cursor()
+        query = f"UPDATE etudiant SET nom = '{nom}', prenom = '{prenom}', email = '{email}', telephone = '{telephone}' WHERE idetudiant = {id}"
         cursor.execute(query)
-        db.commit()
-        affected_rows = cursor.rowcount
+        conn.commit()
+        affected = cursor.rowcount
         cursor.close()
-        db.close()
-        return affected_rows
+        conn.close()
+        return affected
 
-    def login(self, login_user, password_user):
-        db = self.connect()
-        if db is None:
-            return None
-        cursor = db.cursor()
-        query = "SELECT * FROM user WHERE login = %s AND password = %s"
-        cursor.execute(query, (login_user, password_user))
-        row = cursor.fetchone()
+    def delete(self, id):
+        conn = self.connect()
+        if not conn:
+            return 0
+        cursor = conn.cursor()
+        query = f"DELETE FROM etudiant WHERE idetudiant = {id}"
+        cursor.execute(query)
+        conn.commit()
+        affected = cursor.rowcount
         cursor.close()
-        db.close()
-        return row
+        conn.close()
+        return affected
