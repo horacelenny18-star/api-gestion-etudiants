@@ -19,7 +19,7 @@ def get_db_connection():
 def home():
     return 'Page d\'accueil'
 
-# 1. Requête pour voir tous les étudiants (GET)
+
 @app.route('/v1/etudiants/', methods=['GET'])
 def getEtudiants():
     mydb = get_db_connection()
@@ -46,7 +46,7 @@ def getEtudiants():
     mydb.close()
     return jsonify(etudiants), 200
 
-# 2. Requête pour voir un seul étudiant par son ID (GET)
+
 @app.route('/v1/etudiants/<int:id>', methods=['GET'])
 def getEtudiant(id):
     mydb = get_db_connection()
@@ -54,7 +54,7 @@ def getEtudiant(id):
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
         
     cursor = mydb.cursor()
-    # Utilisation d'une f-string exigée par la consigne
+   
     query = f"SELECT * FROM etudiant WHERE idetudiant = {id}"
     cursor.execute(query)
     row = cursor.fetchone()
@@ -75,7 +75,7 @@ def getEtudiant(id):
     
     return jsonify(etudiant), 200
 
-# 3. Requête pour ajouter un étudiant (POST)
+
 @app.route('/v1/etudiants/', methods=['POST'])
 def addEtudiant():
     data = request.get_json()
@@ -90,7 +90,7 @@ def addEtudiant():
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
         
     cursor = mydb.cursor()
-    # Utilisation d'une f-string pour l'insertion
+  
     query = f"INSERT INTO etudiant (nom, prenom, email, telephone) VALUES ('{nom}', '{prenom}', '{email}', '{telephone}')"
     cursor.execute(query)
     mydb.commit()
@@ -100,7 +100,7 @@ def addEtudiant():
     
     return jsonify({"message": "Étudiant ajouté avec succès"}), 201
 
-# 4. Requête pour supprimer un étudiant (DELETE)
+
 @app.route('/v1/etudiants/<int:id>', methods=['DELETE'])
 def deleteEtudiant(id):
     mydb = get_db_connection()
@@ -108,7 +108,7 @@ def deleteEtudiant(id):
         return jsonify({"error": "Échec de connexion à la base de données"}), 500
         
     cursor = mydb.cursor()
-    # Utilisation d'une f-string pour la suppression
+  
     query = f"DELETE FROM etudiant WHERE idetudiant = {id}"
     cursor.execute(query)
     mydb.commit()
