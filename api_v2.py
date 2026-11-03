@@ -19,6 +19,7 @@ def get_db_connection():
 def home():
     return 'Page d\'accueil (API v2)'
 
+
 @app.route('/v2/etudiants/', methods=['GET'])
 def getEtudiants():
     try:
@@ -100,9 +101,42 @@ def addEtudiant():
         
         cursor.close()
         mydb.close()
-        return jsonify({"message": "Étudiant ajouté avec succès"}), 201
+        return jsonify({"message": "Ajout OK"}), 201
     except Exception as e:
         return jsonify({"error": "Erreur lors de l'insertion des données"}), 500
+
+@app.route('/v2/etudiants/<int:id>', methods=['PUT'])
+def updateEtudiant(id):
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Données JSON manquantes"}), 400
+            
+        nom = data.get('nom')
+        prenom = data.get('prenom')
+        email = data.get('email')
+        telephone = data.get('telephone')
+        
+        mydb = get_db_connection()
+        if mydb is None:
+            return jsonify({"error": "Échec de connexion à la base de données"}), 500
+            
+        cursor = mydb.cursor()
+        query = f"UPDATE etudiant SET nom = '{nom}', prenom = '{prenom}', email = '{email}', telephone = '{telephone}' WHERE idetudiant = {id}"
+        cursor.execute(query)
+        mydb.commit()
+        
+        affected_rows = cursor.rowcount
+        cursor.close()
+        mydb.close()
+        
+        if affected_rows == 0:
+            return jsonify({"erreur": "id invalide"}), 404
+            
+        return jsonify({"message": "Modification OK"}), 200
+    except Exception as e:
+        return jsonify({"error": "Erreur lors de la modification des données"}), 500
+
 
 @app.route('/v2/etudiants/<int:id>', methods=['DELETE'])
 def deleteEtudiant(id):
@@ -121,9 +155,9 @@ def deleteEtudiant(id):
         mydb.close()
         
         if affected_rows == 0:
-            return jsonify({"error": "Étudiant non trouvé"}), 404
+            return jsonify({"error": "id invalide"}), 404
             
-        return jsonify({"message": "Étudiant supprimé avec succès"}), 200
+        return jsonify({"message": "Suppression OK"}), 200
     except Exception as e:
         return jsonify({"error": "Impossible de supprimer l'étudiant"}), 500
 
